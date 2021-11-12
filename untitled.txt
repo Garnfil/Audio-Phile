@@ -1,0 +1,55 @@
+//when the user log in
+if (isset($_POST['login'])) {
+  $email = $_POST['email'];
+  $password = $_POST['password'];
+  $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+   $s = "SELECT * FROM customers WHERE email = '$email' && password = '$hashed_password'";
+  $query = mysqli_query($conn,$s);
+  $nums = mysqli_num_rows($query);
+  $profiles = mysqli_fetch_all($query, MYSQLI_ASSOC);
+    
+   if (password_verify($password, $hashed_password)) {
+      foreach ($profiles as $profile){
+        $_SESSION['uniqueid'] = $profile['unique_id'];
+        $_SESSION['fullname'] = $profile['fullname'];
+        $_SESSION ['email'] = $profile['email'];
+        header("location: home.php");
+      }
+  } else{
+    header('location: /signin.html');
+  }
+}
+
+//if the user create account
+
+if (isset($_POST['sign_up'])) {
+  $errors = array('email'=>"",'fullname'=>"");
+  $user_name = mysqli_real_escape_string($conn,$_POST['fullname']);
+  $user_email = mysqli_real_escape_string($conn,$_POST['email']);
+  $user_password = mysqli_real_escape_string($conn,$_POST['password']);
+  $uniqueid = rand(10000,100000);
+  $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+  if (!filter_var($user_email, FILTER_VALIDATE_EMAIL)) {
+    $errors['email'] = 'Email must be a valid email';
+  }
+  if (!preg_match('/^([a-zA-Z\s]+)(,\s*[a-zA-Z\s]*)*$/', $user_name)) {
+    $errors['fullname'] = 'Your name must be Letters only';
+  }
+  
+  if (array_filter($errors)) {
+    // errors
+  } else {
+    $s = "SELECT * FROM customers WHERE email = '$email' && password = '$password'";
+    $query = mysqli_query($conn,$s);
+    $nums = mysqli_num_rows($query);
+    
+      $sql = "INSERT INTO customers(unique_id,fullname,email,password) VALUES('$uniqueid','$user_name','$user_email','$hashed_password')";
+      
+      if (mysqli_query($conn,$sql)) {
+        header('location: /signin.html');
+      } else{
+        echo 'Error Query: ' . mysqli_error($conn);
+      }
+   }
+}
